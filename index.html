@@ -101,7 +101,10 @@
                 reviews: [
                     { user: 'Ani', rating: 5, comment: 'Tasnya bagus sekali, kuat dan ramah lingkungan. Sangat direkomendasikan!' },
                     { user: 'Budi', rating: 4, comment: 'Lumayan bagus, tapi agak kecil sedikit.' }
-                ]
+                ],
+                stock: 15,
+                sold: 120,
+                category: 'Tas'
             },
             {
                 id: 2,
@@ -114,7 +117,10 @@
                 reviews: [
                     { user: 'Citra', rating: 5, comment: 'Potnya lucu dan unik! Tanaman saya jadi terlihat lebih cantik.' },
                     { user: 'Dedi', rating: 3, comment: 'Bagus sih, tapi agak ringkih.' }
-                ]
+                ],
+                stock: 30,
+                sold: 85,
+                category: 'Dekorasi'
             },
             {
                 id: 3,
@@ -127,7 +133,10 @@
                 reviews: [
                     { user: 'Eka', rating: 5, comment: 'Kertasnya nyaman untuk ditulis, bangga pakai produk daur ulang.' },
                     { user: 'Fajar', rating: 4, comment: 'Desainnya sederhana tapi fungsional.' }
-                ]
+                ],
+                stock: 50,
+                sold: 230,
+                category: 'Alat Tulis'
             },
             {
                 id: 4,
@@ -140,7 +149,38 @@
                 reviews: [
                     { user: 'Gita', rating: 4, comment: 'Unik dan bermanfaat. Anak saya suka!' },
                     { user: 'Hadi', rating: 5, comment: 'Kreatif sekali, cocok untuk hadiah.' }
-                ]
+                ],
+                stock: 25,
+                sold: 90,
+                category: 'Alat Tulis'
+            },
+            {
+                id: 5,
+                name: 'Dompet Kain Perca',
+                price: 'Rp 30.000',
+                priceInPoints: 30000,
+                imageUrl: 'https://placehold.co/150x150/c4b5fd/5b21b6?text=Dompet+Perca',
+                description: 'Dompet unik ini dibuat dari kain perca sisa produksi, mengurangi limbah tekstil. Desainnya cerah dan memiliki banyak sekat untuk kartu dan uang.',
+                specifications: ['Bahan: Kain perca daur ulang', 'Ukuran: 12cm x 9cm', 'Warna: Campuran', 'Fitur: 4 slot kartu, 1 slot uang kertas'],
+                reviews: [
+                    { user: 'Ida', rating: 5, comment: 'Dompetnya cantik dan ramah lingkungan. Suka sekali!' }
+                ],
+                stock: 10,
+                sold: 50,
+                category: 'Aksesoris'
+            },
+            {
+                id: 6,
+                name: 'Hiasan Dinding Botol Kaca',
+                price: 'Rp 50.000',
+                priceInPoints: 50000,
+                imageUrl: 'https://placehold.co/150x150/a7f3d0/065f46?text=Hiasan+Kaca',
+                description: 'Hiasan dinding artistik ini dibuat dari potongan botol kaca daur ulang, memberikan sentuhan modern dan unik pada ruangan Anda.',
+                specifications: ['Bahan: Kaca daur ulang, kayu', 'Ukuran: 20cm x 30cm', 'Desain: Abstrak', 'Fitur: Siap gantung'],
+                reviews: [],
+                stock: 8,
+                sold: 30,
+                category: 'Dekorasi'
             },
         ];
 
@@ -644,6 +684,11 @@
                     return stars;
                 };
 
+                // Filter for recommended products (same category, but not the current product)
+                const recommendedProducts = allProducts.filter(
+                    p => p.category === product.category && p.id !== product.id
+                );
+
                 return (
                     <div className="flex flex-col p-4 bg-gray-50 min-h-screen pb-20">
                         <Header showBackButton={true} onBack={() => navigateTo('marketplace')} />
@@ -661,6 +706,18 @@
                                     <p className="text-4xl font-extrabold text-green-600 mb-4">{product.price}</p>
                                     <div className="flex items-center justify-center text-gray-600">
                                         Poin Anda: <span className="ml-2 font-bold text-emerald-700">{points}</span> <i className="fas fa-coins text-yellow-500 ml-1"></i>
+                                    </div>
+                                    <div className="flex justify-center items-center space-x-4 mt-2 text-gray-700 text-sm">
+                                        {product.stock !== undefined && (
+                                            <span>
+                                                <i className="fas fa-cubes mr-1"></i> Stok: {product.stock > 0 ? product.stock : 'Habis'}
+                                            </span>
+                                        )}
+                                        {product.sold !== undefined && (
+                                            <span>
+                                                <i className="fas fa-tag mr-1"></i> Terjual: {product.sold}x
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -703,15 +760,50 @@
                                 )}
                             </div>
 
+                            {/* Chat with Seller Button */}
+                            <button
+                                onClick={() => alert('Fitur chat dengan penjual belum tersedia. Ini akan membuka jendela chat baru.')}
+                                className="w-full py-3 px-6 rounded-full font-bold text-white shadow-md transition-all duration-300 transform bg-blue-500 hover:bg-blue-600 hover:scale-105 flex items-center justify-center mb-4"
+                            >
+                                <i className="fas fa-comments mr-3"></i> Chat dengan Penjual
+                            </button>
+
                             {/* Buy Button */}
                             <button
                                 onClick={handlePurchaseOnDetail}
-                                className={`w-full py-4 px-6 rounded-full font-bold text-white shadow-xl transition-all duration-300 transform ${points >= product.priceInPoints ? 'bg-green-600 hover:bg-green-700 hover:scale-105' : 'bg-red-500 cursor-not-allowed'} flex items-center justify-center text-xl`}
-                                disabled={points < product.priceInPoints}
+                                className={`w-full py-4 px-6 rounded-full font-bold text-white shadow-xl transition-all duration-300 transform ${points >= product.priceInPoints && product.stock > 0 ? 'bg-green-600 hover:bg-green-700 hover:scale-105' : 'bg-red-500 cursor-not-allowed'} flex items-center justify-center text-xl`}
+                                disabled={points < product.priceInPoints || product.stock <= 0}
                             >
                                 <i className="fas fa-shopping-cart mr-3"></i>
-                                {points >= product.priceInPoints ? `Beli Sekarang (${product.priceInPoints} Poin)` : `Poin Tidak Cukup (${product.priceInPoints} Poin)`}
+                                {product.stock <= 0 ? 'Stok Habis' : (points >= product.priceInPoints ? `Beli Sekarang (${product.priceInPoints} Poin)` : `Poin Tidak Cukup (${product.priceInPoints} Poin)`)}
                             </button>
+
+                            {/* Recommended Products Section */}
+                            {recommendedProducts.length > 0 && (
+                                <div className="mt-8 bg-white p-6 rounded-2xl shadow-lg w-full">
+                                    <h3 className="font-bold text-xl text-gray-800 mb-4">Produk Rekomendasi</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {recommendedProducts.map(recProduct => (
+                                            <div
+                                                key={recProduct.id}
+                                                className="bg-gray-50 rounded-xl shadow-sm overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-md cursor-pointer border border-gray-100"
+                                                onClick={() => navigateTo('product-detail', recProduct)}
+                                            >
+                                                <img
+                                                    src={recProduct.imageUrl}
+                                                    alt={recProduct.name}
+                                                    className="w-full h-24 object-cover"
+                                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/100x80/cccccc/000000?text=Product"; }}
+                                                />
+                                                <div className="p-2">
+                                                    <h4 className="font-semibold text-gray-800 text-sm truncate">{recProduct.name}</h4>
+                                                    <p className="text-green-600 font-bold text-xs mt-1">{recProduct.price}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
