@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Daur Ulang</title>
+    <title>Aplikasi Daur Ulang Hijau</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome CDN for icons -->
@@ -16,28 +16,47 @@
     <!-- React and ReactDOM CDNs -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- New React 18 Client API for createRoot -->
+    <script crossorigin src="https://unpkg.com/react-dom/client"></script>
+
 
     <style>
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            background-color: #f8fafc; /* Tailwind gray-50 equivalent */
+            background-color: #f0fdf4; /* Light green background for home, dark for scan */
         }
         @keyframes scan-line {
-            0% { top: 0%; }
-            50% { top: 99%; }
-            100% { top: 0%; }
+            0% { top: 0%; opacity: 0.5; }
+            50% { top: 99%; opacity: 1; }
+            100% { top: 0%; opacity: 0.5; }
         }
         .animate-scan-line {
-            animation: scan-line 3s infinite linear;
+            animation: scan-line 3s infinite cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        /* Custom Tailwind-like colors/shadows if not directly available or for consistency */
-        .bg-green-50 { background-color: #f0fdf4; }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.3); opacity: 0.7; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .animate-pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        /* Custom Tailwind-like colors/shadows for consistency */
+        .bg-green-50 { background-color: #f0fdf4; } /* Lighter green */
         .text-green-600 { color: #16a34a; }
-        .bg-green-500 { background-color: #22c55e; }
-        .bg-green-600 { background-color: #16a34a; }
+        .bg-green-500 { background-color: #22c55e; } /* Standard green */
+        .bg-green-600 { background-color: #16a34a; } /* Darker green */
         .hover\:bg-green-700:hover { background-color: #15803d; }
-        .text-yellow-500 { color: #f59e0b; }
+        .text-emerald-700 { color: #047857; }
+        .bg-emerald-100 { background-color: #d1fae5; }
         .bg-yellow-500 { background-color: #f59e0b; }
         .hover\:bg-yellow-600:hover { background-color: #d97706; }
         .bg-blue-500 { background-color: #3b82f6; }
@@ -56,55 +75,113 @@
         .transform { transform: var(--tw-transform); }
         .hover\:scale-105:hover { --tw-scale-x: 1.05; --tw-scale-y: 1.05; transform: var(--tw-transform); }
         .hover\:shadow-lg:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .bg-gradient-to-br-green {
+            background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+            --tw-gradient-stops: #a7f3d0, #dcfce7;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // React application code goes here
         const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM; // Import createRoot from ReactDOM
+
+        // Product data (moved outside App component to be accessible globally for default product)
+        const allProducts = [
+            {
+                id: 1,
+                name: 'Tas Belanja Daur Ulang',
+                price: 'Rp 45.000',
+                priceInPoints: 45000,
+                imageUrl: 'https://placehold.co/150x150/fde047/713f12?text=Tas+Daur+Ulang',
+                description: 'Tas belanja ramah lingkungan ini dibuat dari bahan daur ulang berkualitas tinggi, mengurangi limbah plastik dan mendukung keberlanjutan. Desainnya stylish dan tahan lama, cocok untuk kebutuhan sehari-hari Anda.',
+                specifications: ['Bahan: Plastik daur ulang', 'Ukuran: 35cm x 40cm', 'Warna: Krem', 'Kapasitas: 10 kg', 'Fitur: Dapat dilipat, ringan'],
+                reviews: [
+                    { user: 'Ani', rating: 5, comment: 'Tasnya bagus sekali, kuat dan ramah lingkungan. Sangat direkomendasikan!' },
+                    { user: 'Budi', rating: 4, comment: 'Lumayan bagus, tapi agak kecil sedikit.' }
+                ]
+            },
+            {
+                id: 2,
+                name: 'Pot Tanaman dari Botol',
+                price: 'Rp 25.000',
+                priceInPoints: 25000,
+                imageUrl: 'https://placehold.co/150x150/d9f991/3f6212?text=Pot+Botol',
+                description: 'Pot tanaman unik ini dibuat dari botol plastik bekas yang diolah kembali. Cocok untuk tanaman hias kecil, menambahkan sentuhan hijau di rumah Anda sekaligus berkontribusi pada lingkungan.',
+                specifications: ['Bahan: Botol plastik daur ulang', 'Diameter: 15cm', 'Tinggi: 12cm', 'Warna: Beragam (tergantung ketersediaan)', 'Fitur: Drainase baik'],
+                reviews: [
+                    { user: 'Citra', rating: 5, comment: 'Potnya lucu dan unik! Tanaman saya jadi terlihat lebih cantik.' },
+                    { user: 'Dedi', rating: 3, comment: 'Bagus sih, tapi agak ringkih.' }
+                ]
+            },
+            {
+                id: 3,
+                name: 'Buku Catatan Kertas Daur Ulang',
+                price: 'Rp 35.000',
+                priceInPoints: 35000,
+                imageUrl: 'https://placehold.co/150x150/bfdbfe/172554?text=Buku+Daur+Ulang',
+                description: 'Buku catatan ini terbuat dari kertas daur ulang sepenuhnya, menjadikannya pilihan sempurna bagi Anda yang peduli lingkungan. Kualitas kertas premium dan cocok untuk menulis atau menggambar.',
+                specifications: ['Bahan: Kertas daur ulang 100%', 'Ukuran: A5', 'Jumlah Halaman: 80 lembar', 'Sampul: Karton daur ulang', 'Fitur: Spiral ring'],
+                reviews: [
+                    { user: 'Eka', rating: 5, comment: 'Kertasnya nyaman untuk ditulis, bangga pakai produk daur ulang.' },
+                    { user: 'Fajar', rating: 4, comment: 'Desainnya sederhana tapi fungsional.' }
+                ]
+            },
+            {
+                id: 4,
+                name: 'Tempat Pensil dari Kardus',
+                price: 'Rp 20.000',
+                priceInPoints: 20000,
+                imageUrl: 'https://placehold.co/150x150/ffe4e6/831843?text=Tempat+Pensil',
+                description: 'Tempat pensil fungsional dan ramah lingkungan ini dibuat dari kardus bekas yang dihias secara artistik. Ideal untuk menjaga meja kerja Anda tetap rapi.',
+                specifications: ['Bahan: Kardus daur ulang', 'Ukuran: 10cm x 10cm x 12cm', 'Warna: Kombinasi', 'Fitur: Sekat pembatas', 'Desain: Handmade'],
+                reviews: [
+                    { user: 'Gita', rating: 4, comment: 'Unik dan bermanfaat. Anak saya suka!' },
+                    { user: 'Hadi', rating: 5, comment: 'Kreatif sekali, cocok untuk hadiah.' }
+                ]
+            },
+        ];
 
         // Main App component
         const App = () => {
-            // State to manage current screen/page, now defaults to 'scan-qr'
-            const [currentScreen, setCurrentScreen] = useState('scan-qr'); // Changed to 'scan-qr'
-            // State to simulate points
-            const [points, setPoints] = useState(1250);
-            // State to simulate loading for scanning
+            // Set default screen to 'product-detail' and select the first product
+            const [currentScreen, setCurrentScreen] = useState('product-detail');
+            const [points, setPoints] = useState(100000);
             const [isScanning, setIsScanning] = useState(false);
-            // State for search input in "Find Machine"
             const [searchQuery, setSearchQuery] = useState('');
+            // Set the first product as the default selected product
+            const [selectedProduct, setSelectedProduct] = useState(allProducts[0]);
 
-            // Function to navigate between screens
-            const navigateTo = (screenName) => {
+            const navigateTo = (screenName, product = null) => {
                 setCurrentScreen(screenName);
-                // Scroll to top when navigating
+                if (product) {
+                    setSelectedProduct(product);
+                } else {
+                    setSelectedProduct(null); // Clear selected product if not navigating to product detail
+                }
                 window.scrollTo(0, 0);
             };
 
-            // Simulate scanning process
             const handleScan = () => {
                 setIsScanning(true);
-                // Simulate API call or processing time
                 setTimeout(() => {
-                    setPoints(prevPoints => prevPoints + 100); // Add 100 points
+                    setPoints(prevPoints => prevPoints + 100);
                     setIsScanning(false);
                     alert('Pemindaian selesai! Anda mendapatkan 100 poin.');
-                    navigateTo('home'); // Go back to home after scan
-                }, 3000); // 3 seconds simulation
+                    navigateTo('home');
+                }, 3000);
             };
 
-            // Placeholder for a custom alert/modal instead of window.alert
             const alert = (message) => {
-                // In a real app, you'd render a modal here
                 console.log("ALERT:", message);
                 const modal = document.createElement('div');
                 modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
                 modal.innerHTML = `
-                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm mx-auto text-center">
-                        <p class="text-lg font-semibold mb-4">${message}</p>
-                        <button id="close-modal" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">Tutup</button>
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm mx-auto text-center border-2 border-green-500">
+                        <p class="text-lg font-semibold mb-4 text-gray-800">${message}</p>
+                        <button id="close-modal" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full shadow-md">Tutup</button>
                     </div>
                 `;
                 document.body.appendChild(modal);
@@ -113,43 +190,41 @@
                 };
             };
 
-            // Component for the Header
             const Header = ({ title, showBackButton = false, onBack = () => {} }) => (
-                <div className="flex items-center justify-between p-4 bg-white shadow-sm rounded-b-xl">
+                <div className={`flex items-center justify-between p-4 shadow-sm rounded-b-xl relative z-10 ${currentScreen === 'scan-qr' ? 'bg-zinc-800 text-white' : 'bg-white text-gray-800'}`}>
                     {showBackButton ? (
-                        <button onClick={onBack} className="text-gray-600 text-2xl">
+                        <button onClick={onBack} className={`text-2xl p-2 rounded-full transition-colors duration-200 ${currentScreen === 'scan-qr' ? 'text-white hover:bg-zinc-700' : 'text-gray-600 hover:bg-gray-100'}`}>
                             <i className="fas fa-arrow-left"></i>
                         </button>
                     ) : (
-                        <div className="text-xl font-semibold text-gray-800">10.00</div>
+                        <div className="text-xl font-semibold">10.00</div>
                     )}
                     <div className="flex items-center space-x-2">
-                        <i className="fas fa-signal text-gray-600"></i>
-                        <i className="fas fa-wifi text-gray-600"></i>
-                        <i className="fas fa-battery-full text-gray-600"></i>
+                        <i className="fas fa-signal"></i>
+                        <i className="fas fa-wifi"></i>
+                        <i className="fas fa-battery-full"></i>
                     </div>
                 </div>
             );
 
-            // Component for the Bottom Navigation Bar
             const BottomNavBar = () => (
                 <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-3 flex justify-around items-center rounded-t-3xl border-t border-gray-200 z-40">
-                    <button onClick={() => navigateTo('home')} className={`flex flex-col items-center p-2 rounded-full transition-colors duration-200 ${currentScreen === 'home' ? 'text-green-600 bg-green-50' : 'text-gray-500'}`}>
-                        <i className="fas fa-th-large text-xl"></i>
+                    <button onClick={() => navigateTo('home')} className={`flex flex-col items-center p-2 rounded-full transition-colors duration-200 ${currentScreen === 'home' ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:bg-gray-100'}`}>
+                        <i className="fas fa-home text-xl"></i>
                         <span className="text-xs mt-1">Beranda</span>
                     </button>
-                    <button onClick={() => navigateTo('scan-qr')} className={`relative -top-4 bg-green-500 p-4 rounded-full shadow-lg transition-colors duration-200 ${currentScreen === 'scan-qr' ? 'bg-green-600' : 'bg-green-500'} text-white`}>
+                    <button onClick={() => navigateTo('scan-qr')} className={`relative -top-4 bg-gradient-to-br from-green-500 to-emerald-500 p-4 rounded-full shadow-xl transition-all duration-200 ${currentScreen === 'scan-qr' ? 'scale-110 ring-4 ring-emerald-300' : 'hover:scale-105'} text-white`}>
                         <i className="fas fa-qrcode text-2xl"></i>
                     </button>
-                    <button onClick={() => navigateTo('find-machine')} className={`flex flex-col items-center p-2 rounded-full transition-colors duration-200 ${currentScreen === 'find-machine' ? 'text-green-600 bg-green-50' : 'text-gray-500'}`}>
-                        <i className="fas fa-search text-xl"></i>
-                        <span className="text-xs mt-1">Cari</span>
+                    <button onClick={() => navigateTo('find-machine')} className={`flex flex-col items-center p-2 rounded-full transition-colors duration-200 ${currentScreen === 'find-machine' ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:bg-gray-100'}`}>
+                        <i className="fas fa-map-marker-alt text-xl"></i>
+                        <span className="text-xs mt-1">Lokasi</span>
                     </button>
-                    <button onClick={() => navigateTo('learn')} className={`flex flex-col items-center p-2 rounded-full transition-colors duration-200 ${currentScreen === 'learn' ? 'text-green-600 bg-green-50' : 'text-gray-500'}`}>
+                    <button onClick={() => navigateTo('learn')} className={`flex flex-col items-center p-2 rounded-full transition-colors duration-200 ${currentScreen === 'learn' ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:bg-gray-100'}`}>
                         <i className="fas fa-book-open text-xl"></i>
                         <span className="text-xs mt-1">Edukasi</span>
                     </button>
-                    <button onClick={() => navigateTo('marketplace')} className={`flex flex-col items-center p-2 rounded-full transition-colors duration-200 ${currentScreen === 'marketplace' ? 'text-green-600 bg-green-50' : 'text-gray-500'}`}>
+                    <button onClick={() => navigateTo('marketplace')} className={`flex flex-col items-center p-2 rounded-full transition-colors duration-200 ${currentScreen === 'marketplace' ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:bg-gray-100'}`}>
                         <i className="fas fa-store text-xl"></i>
                         <span className="text-xs mt-1">Toko</span>
                     </button>
@@ -158,164 +233,165 @@
 
             // Home Screen Component
             const HomeScreen = () => (
-                <div className="p-4 pt-0 bg-gray-50 min-h-screen pb-20">
-                    {/* User Profile and Points Section */}
-                    <div className="flex justify-between items-center py-4 px-2 rounded-b-2xl">
+                <div className="p-4 pt-0 bg-green-50 min-h-screen pb-20">
+                    {/* User Profile and Points Section - More vibrant */}
+                    <div className="flex justify-between items-center py-4 px-2 bg-white rounded-b-2xl shadow-md border-b-2 border-green-100">
                         <div className="flex items-center space-x-3">
-                            <img
-                                src="https://placehold.co/60x60/808080/FFFFFF?text=Adam" // Placeholder for profile image
-                                alt="User Profile"
-                                className="w-14 h-14 rounded-full border-2 border-green-500 shadow-md"
-                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/60x60/808080/FFFFFF?text=User"; }}
-                            />
+                            <div className="relative">
+                                <img
+                                    src="https://placehold.co/60x60/808080/FFFFFF?text=Adam"
+                                    alt="User Profile"
+                                    className="w-14 h-14 rounded-full border-3 border-emerald-500 shadow-md transform transition-transform duration-300 hover:scale-105"
+                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/60x60/808080/FFFFFF?text=User"; }}
+                                />
+                                <span className="absolute bottom-0 right-0 block h-4 w-4 rounded-full bg-green-500 ring-2 ring-white"></span>
+                            </div>
                             <div>
-                                <p className="text-gray-700 text-sm">Selamat Datang,</p>
-                                <p className="font-bold text-lg text-gray-900">Adam</p>
+                                <p className="text-gray-700 text-sm">Halo,</p>
+                                <p className="font-bold text-lg text-emerald-700">Adam!</p>
                             </div>
                         </div>
-                        <div className="flex items-center bg-white px-4 py-2 rounded-full shadow-md">
-                            <i className="fas fa-coins text-yellow-500 text-lg mr-2"></i>
-                            <span className="font-semibold text-gray-800">{points} Poin</span>
+                        <div className="flex items-center bg-emerald-500 text-white px-4 py-2 rounded-full shadow-lg transform transition-transform duration-300 hover:scale-105">
+                            <i className="fas fa-coins text-yellow-300 text-lg mr-2 animate-bounce"></i>
+                            <span className="font-semibold">{points} Poin</span>
                         </div>
                     </div>
 
-                    {/* Header image with trees */}
-                    <div className="relative w-full h-48 bg-gradient-to-br from-green-100 to-lime-50 rounded-3xl overflow-hidden shadow-lg mb-6">
+                    {/* Hero Section with dynamic elements */}
+                    <div className="relative w-full h-48 bg-gradient-to-br from-emerald-100 to-green-100 rounded-3xl overflow-hidden shadow-lg mt-6 mb-6 flex items-center justify-center">
                         <img
-                            src="https://placehold.co/300x150/dcfce7/16a34a?text=Trees"
-                            alt="Decorative trees"
-                            className="absolute bottom-0 left-0 w-full h-full object-cover opacity-60 rounded-3xl"
-                            onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/300x150/dcfce7/16a34a?text=Trees"; }}
+                            src="https://placehold.co/300x150/dcfce7/16a34a?text=Eco+Growth"
+                            alt="Eco Growth Illustration"
+                            className="absolute bottom-0 left-0 w-full h-full object-cover opacity-70"
+                            onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/300x150/dcfce7/16a34a?text=Eco+Growth"; }}
                         />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="bg-white bg-opacity-80 px-6 py-3 rounded-full shadow-md text-green-700 font-semibold text-sm animate-pulse">
-                                Siklus Hidup: <span className="font-bold">00:00</span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-20 rounded-3xl">
+                            <div className="bg-white bg-opacity-90 px-8 py-4 rounded-full shadow-xl text-green-700 font-bold text-xl mb-2 animate-float">
+                                Siklus Hidup Anda
+                            </div>
+                            <div className="text-white text-4xl font-extrabold drop-shadow-lg">
+                                🌳 123 Hari
                             </div>
                         </div>
                     </div>
 
-                    {/* Action Cards */}
+                    {/* Action Cards - Enhanced visual styles */}
                     <div className="space-y-4">
                         {/* Scan & Collect Points Card */}
-                        <div className="bg-white p-5 rounded-2xl shadow-md flex items-center space-x-4 hover:shadow-lg transition-shadow duration-300">
-                            <div className="w-20 h-20 flex-shrink-0">
-                                <img
-                                    src="https://placehold.co/80x80/d9f991/166534?text=Scan"
-                                    alt="Scan Icon"
-                                    className="w-full h-full object-contain"
-                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/80x80/d9f991/166534?text=Scan"; }}
-                                />
+                        <div className="bg-gradient-to-r from-yellow-100 to-yellow-50 p-5 rounded-2xl shadow-md flex items-center space-x-4 hover:shadow-lg transition-shadow duration-300 border-l-4 border-yellow-500">
+                            <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center bg-yellow-200 rounded-full p-2">
+                                <i className="fas fa-barcode text-yellow-600 text-4xl"></i>
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg text-gray-800">Pindai & Kumpulkan Poin</h3>
-                                <p className="text-gray-600 text-sm mt-1">Pindai barcode mesin untuk dapatkan poin instan.</p>
+                                <p className="text-gray-600 text-sm mt-1">Dapatkan poin instan dengan memindai barcode mesin daur ulang.</p>
                                 <button
                                     onClick={() => navigateTo('scan-qr')}
                                     className="mt-3 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full shadow-md transition-all duration-300 transform hover:scale-105"
                                 >
-                                    Mulai Pindai <i className="fas fa-barcode ml-2"></i>
+                                    Mulai Pindai <i className="fas fa-camera ml-2"></i>
                                 </button>
                             </div>
                         </div>
 
                         {/* Find Nearby Machine Card */}
-                        <div className="bg-white p-5 rounded-2xl shadow-md flex items-center space-x-4 hover:shadow-lg transition-shadow duration-300">
-                            <div className="w-20 h-20 flex-shrink-0">
-                                <img
-                                    src="https://placehold.co/80x80/a7f3d0/065f46?text=Map"
-                                    alt="Map Icon"
-                                    className="w-full h-full object-contain"
-                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/80x80/a7f3d0/065f46?text=Map"; }}
-                                />
+                        <div className="bg-gradient-to-r from-green-100 to-green-50 p-5 rounded-2xl shadow-md flex items-center space-x-4 hover:shadow-lg transition-shadow duration-300 border-l-4 border-green-500">
+                            <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center bg-green-200 rounded-full p-2">
+                                <i className="fas fa-map-marker-alt text-green-600 text-4xl"></i>
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg text-gray-800">Temukan Mesin Terdekat</h3>
-                                <p className="text-gray-600 text-sm mt-1">GPS akan tunjukkan rute & jarak.</p>
+                                <p className="text-gray-600 text-sm mt-1">Aplikasi akan menunjukkan rute dan jarak ke mesin terdekat.</p>
                                 <button
                                     onClick={() => navigateTo('find-machine')}
                                     className="mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition-all duration-300 transform hover:scale-105"
                                 >
-                                    Mulai Temukan <i className="fas fa-map-marker-alt ml-2"></i>
+                                    Mulai Temukan <i className="fas fa-search-location ml-2"></i>
                                 </button>
                             </div>
                         </div>
 
                         {/* Learn Recycling Card */}
-                        <div className="bg-white p-5 rounded-2xl shadow-md flex items-center space-x-4 hover:shadow-lg transition-shadow duration-300">
-                            <div className="w-20 h-20 flex-shrink-0">
-                                <img
-                                    src="https://placehold.co/80x80/bfdbfe/1e40af?text=Learn"
-                                    alt="Learn Icon"
-                                    className="w-full h-full object-contain"
-                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/80x80/bfdbfe/1e40af?text=Learn"; }}
-                                />
+                        <div className="bg-gradient-to-r from-blue-100 to-blue-50 p-5 rounded-2xl shadow-md flex items-center space-x-4 hover:shadow-lg transition-shadow duration-300 border-l-4 border-blue-500">
+                            <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center bg-blue-200 rounded-full p-2">
+                                <i className="fas fa-lightbulb text-blue-600 text-4xl"></i>
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg text-gray-800">Belajar Daur Ulang</h3>
-                                <p className="text-gray-600 text-sm mt-1">Pelajari cara memilih & olah sampah jadi produk.</p>
+                                <p className="text-gray-600 text-sm mt-1">Pelajari cara memilah sampah dan mengubahnya menjadi produk baru.</p>
                                 <button
                                     onClick={() => navigateTo('learn')}
                                     className="mt-3 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-md transition-all duration-300 transform hover:scale-105"
                                 >
-                                    Mulai Belajar <i className="fas fa-lightbulb ml-2"></i>
+                                    Mulai Belajar <i className="fas fa-graduation-cap ml-2"></i>
                                 </button>
                             </div>
                         </div>
 
                         {/* Marketplace Card */}
-                        <div className="bg-white p-5 rounded-2xl shadow-md flex items-center space-x-4 hover:shadow-lg transition-shadow duration-300">
-                            <div className="w-20 h-20 flex-shrink-0">
-                                <img
-                                    src="https://placehold.co/80x80/fef08a/854d0e?text=Shop"
-                                    alt="Shop Icon"
-                                    className="w-full h-full object-contain"
-                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/80x80/fef08a/854d0e?text=Shop"; }}
-                                />
+                        <div className="bg-gradient-to-r from-purple-100 to-purple-50 p-5 rounded-2xl shadow-md flex items-center space-x-4 hover:shadow-lg transition-shadow duration-300 border-l-4 border-purple-500">
+                            <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center bg-purple-200 rounded-full p-2">
+                                <i className="fas fa-store text-purple-600 text-4xl"></i>
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg text-gray-800">Marketplace Poin</h3>
-                                <p className="text-gray-600 text-sm mt-1">Tukar poinmu dengan produk daur ulang, atau jual hasil kreasimu!</p>
+                                <p className="text-gray-600 text-sm mt-1">Tukar poinmu dengan produk daur ulang atau jual kreasimu!</p>
                                 <button
                                     onClick={() => navigateTo('marketplace')}
                                     className="mt-3 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-full shadow-md transition-all duration-300 transform hover:scale-105"
                                 >
-                                    Kunjungi Marketplace <i className="fas fa-shopping-bag ml-2"></i>
+                                    Kunjungi Marketplace <i className="fas fa-shopping-basket ml-2"></i>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Daily Tip/Challenge Section */}
+                    <div className="mt-8 p-5 bg-emerald-500 text-white rounded-2xl shadow-lg flex items-center space-x-4 transform transition-transform duration-300 hover:scale-[1.02]">
+                        <i className="fas fa-leaf text-white text-4xl flex-shrink-0 animate-pulse-ring"></i>
+                        <div>
+                            <h3 className="font-bold text-xl">Tips Daur Ulang Harian</h3>
+                            <p className="text-sm mt-1 opacity-90">
+                                "Pastikan botol plastik bersih dan kering sebelum didaur ulang untuk proses yang lebih efisien!"
+                            </p>
                         </div>
                     </div>
                 </div>
             );
 
-            // Scan QR Screen Component
+            // Scan QR Screen Component - Enhanced for Elegance
             const ScanQRScreen = () => (
-                <div className="flex flex-col items-center p-4 bg-gray-100 min-h-screen pb-20">
+                <div className="flex flex-col items-center bg-zinc-900 min-h-screen pb-20 text-white">
                     <Header showBackButton={true} onBack={() => navigateTo('home')} />
-                    <div className="flex-grow flex flex-col items-center justify-center w-full max-w-lg mx-auto p-6 bg-white rounded-3xl shadow-xl border border-green-200">
-                        <h2 className="text-3xl font-extrabold text-green-700 mb-6 text-center">
-                            Pindai Barcode Mesin Daur Ulang
+                    <div className="flex-grow flex flex-col items-center justify-center w-full max-w-lg mx-auto px-6 py-12">
+                        <h2 className="text-4xl font-extrabold mb-4 text-center leading-tight text-white">
+                            Pindai QR Code Anda
                         </h2>
-                        <p className="text-gray-600 mb-8 text-center text-lg leading-relaxed">
-                            Arahkan kamera Anda ke barcode yang tersedia pada mesin untuk memulai proses daur ulang.
+                        <p className="text-gray-300 mb-10 text-center text-lg leading-relaxed max-w-sm">
+                            Arahkan kamera ke QR Code mesin untuk memulai proses daur ulang.
                         </p>
 
-                        <div className="relative w-72 h-72 border-4 border-dashed border-green-500 rounded-2xl flex items-center justify-center overflow-hidden bg-gradient-to-br from-green-50 to-white shadow-inner">
-                            {/* Visual scanner animation */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <i className="fas fa-camera text-green-300 text-9xl opacity-40"></i>
-                            </div>
-                            <div className="absolute w-full h-1 bg-green-500 animate-scan-line z-10"></div>
-                            {/* Scanner corners */}
-                            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-600 rounded-tl-lg"></div>
-                            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-600 rounded-tr-lg"></div>
-                            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-600 rounded-bl-lg"></div>
-                            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-600 rounded-bl-lg"></div>
+                        <div className="relative w-80 h-80 bg-white rounded-xl shadow-2xl flex items-center justify-center overflow-hidden">
+                            {/* Actual QR Code Placeholder (replace with real QR scan overlay) */}
+                            <img
+                                src="https://placehold.co/200x200/FFFFFF/000000?text=QR+Code"
+                                alt="QR Code Placeholder"
+                                className="w-48 h-48 object-contain"
+                            />
+                            {/* Scanning corners - white and crisp */}
+                            <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-white rounded-tl-lg"></div>
+                            <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-white rounded-tr-lg"></div>
+                            <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-white rounded-bl-lg"></div>
+                            <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-white rounded-br-lg"></div>
+
+                            {/* Animated Scan Line - vibrant green */}
+                            <div className="absolute w-full h-1 bg-green-500 animate-scan-line z-10 opacity-80"></div>
                         </div>
 
                         <button
                             onClick={handleScan}
                             disabled={isScanning}
-                            className={`mt-10 px-8 py-4 rounded-full font-bold text-white shadow-lg transition-all duration-300 transform ${isScanning ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 hover:scale-105'} flex items-center justify-center`}
+                            className={`mt-12 px-10 py-4 rounded-full font-bold text-white shadow-xl transition-all duration-300 transform ${isScanning ? 'bg-gray-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 hover:scale-105'} flex items-center justify-center`}
                         >
                             {isScanning ? (
                                 <>
@@ -323,10 +399,14 @@
                                 </>
                             ) : (
                                 <>
-                                    <i className="fas fa-camera-retro mr-3 text-xl"></i> Mulai Pindai
+                                    <i className="fas fa-camera-retro mr-3 text-xl"></i> Pindai QR Code
                                 </>
                             )}
                         </button>
+
+                        <p className="text-gray-400 text-sm mt-8">
+                            Pastikan QR Code berada dalam bingkai.
+                        </p>
                     </div>
                 </div>
             );
@@ -377,61 +457,281 @@
                 </div>
             );
 
-            // Learn Screen Component
-            const LearnScreen = () => (
-                <div className="flex flex-col p-4 bg-gray-50 min-h-screen pb-20">
-                    <Header showBackButton={true} onBack={() => navigateTo('home')} />
-                    <div className="flex-grow flex flex-col items-center pt-8 w-full max-w-md mx-auto">
-                        <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Belajar Daur Ulang</h2>
+            // Learn Screen Component with Gemini Integration
+            const LearnScreen = () => {
+                const [creativeIdeaInput, setCreativeIdeaInput] = useState('');
+                const [creativeIdeasOutput, setCreativeIdeasOutput] = useState('');
+                const [isGeneratingIdeas, setIsGeneratingIdeas] = useState(false);
+                const [ideaError, setIdeaError] = useState('');
 
-                        <div className="bg-white p-6 rounded-2xl shadow-lg mb-6 w-full transform transition-transform duration-300 hover:scale-[1.02]">
-                            <h3 className="font-bold text-xl text-green-700 mb-3">Memilah Sampah dengan Benar</h3>
-                            <p className="text-gray-700 text-base leading-relaxed">
-                                Memilah sampah adalah langkah pertama yang krusial. Kenali jenis-jenis sampah seperti plastik, kertas, kaca, dan organik. Pastikan sampah bersih sebelum dibuang ke tempat yang sesuai.
-                            </p>
-                            <button onClick={() => alert('Membuka materi lebih lanjut tentang pemilahan sampah...')} className="mt-4 text-blue-600 hover:underline font-semibold">
-                                Baca Selengkapnya <i className="fas fa-arrow-right ml-1"></i>
-                            </button>
-                        </div>
+                const generateCreativeIdeas = async () => {
+                    if (!creativeIdeaInput.trim()) {
+                        setIdeaError('Mohon masukkan jenis material daur ulang terlebih dahulu.');
+                        return;
+                    }
+                    setIdeaError('');
+                    setIsGeneratingIdeas(true);
+                    setCreativeIdeasOutput('');
 
-                        <div className="bg-white p-6 rounded-2xl shadow-lg mb-6 w-full transform transition-transform duration-300 hover:scale-[1.02]">
-                            <h3 className="font-bold text-xl text-yellow-700 mb-3">Manfaat Daur Ulang</h3>
-                            <p className="text-gray-700 text-base leading-relaxed">
-                                Daur ulang mengurangi polusi, menghemat energi, dan melestarikan sumber daya alam. Ini adalah kontribusi nyata untuk bumi yang lebih hijau dan masa depan yang berkelanjutan.
-                            </p>
-                            <button onClick={() => alert('Membuka materi lebih lanjut tentang manfaat daur ulang...')} className="mt-4 text-blue-600 hover:underline font-semibold">
-                                Baca Selengkapnya <i className="fas fa-arrow-right ml-1"></i>
-                            </button>
-                        </div>
+                    try {
+                        let chatHistory = [];
+                        chatHistory.push({ role: "user", parts: [{ text: `Berikan 3 ide kreatif dan singkat untuk mendaur ulang ${creativeIdeaInput}. Fokus pada proyek DIY yang mudah dilakukan di rumah. Formatnya sebagai daftar poin.` }] });
+                        const payload = { contents: chatHistory };
+                        const apiKey = ""; // If you want to use models other than gemini-2.5-flash-preview-05-20 or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                        
+                        let response;
+                        let result;
+                        let retries = 0;
+                        const maxRetries = 3;
+                        const initialDelay = 1000; // 1 second
 
-                        <div className="bg-white p-6 rounded-2xl shadow-lg mb-6 w-full transform transition-transform duration-300 hover:scale-[1.02]">
-                            <h3 className="font-bold text-xl text-purple-700 mb-3">Proyek Daur Ulang Kreatif</h3>
-                            <p className="text-gray-700 text-base leading-relaxed">
-                                Ubah barang bekas menjadi sesuatu yang baru! Botol plastik bisa jadi pot bunga, kardus jadi tempat pensil, dan kain perca jadi tas belanja. Mari berkreasi!
-                            </p>
-                            <button onClick={() => alert('Membuka panduan proyek kreatif...')} className="mt-4 text-blue-600 hover:underline font-semibold">
-                                Lihat Ide <i className="fas fa-arrow-right ml-1"></i>
-                            </button>
-                        </div>
+                        while (retries < maxRetries) {
+                            try {
+                                response = await fetch(apiUrl, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(payload)
+                                });
+                                result = await response.json();
+                                break; // Success, exit loop
+                            } catch (error) {
+                                retries++;
+                                const delay = initialDelay * Math.pow(2, retries - 1);
+                                console.log(`Retrying API call (${retries}/${maxRetries}). Delaying for ${delay}ms...`);
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                                if (retries === maxRetries) throw error; // Throw if max retries reached
+                            }
+                        }
 
-                    </div>
-                </div>
-            );
-
-            // Marketplace Screen Component
-            const MarketplaceScreen = () => {
-                const products = [
-                    { id: 1, name: 'Tas Belanja Daur Ulang', price: 'Rp 45.000', imageUrl: 'https://placehold.co/150x150/fde047/713f12?text=Tas' },
-                    { id: 2, name: 'Pot Tanaman dari Botol', price: 'Rp 25.000', imageUrl: 'https://placehold.co/150x150/d9f991/3f6212?text=Pot' },
-                    { id: 3, name: 'Buku Catatan Kertas Daur Ulang', price: 'Rp 35.000', imageUrl: 'https://placehold.co/150x150/bfdbfe/172554?text=Buku' },
-                    { id: 4, name: 'Tempat Pensil dari Kardus', price: 'Rp 20.000', imageUrl: 'https://placehold.co/150x150/ffe4e6/831843?text=Pensil' },
-                ];
+                        if (result.candidates && result.candidates.length > 0 &&
+                            result.candidates[0].content && result.candidates[0].content.parts &&
+                            result.candidates[0].content.parts.length > 0) {
+                            const text = result.candidates[0].content.parts[0].text;
+                            setCreativeIdeasOutput(text);
+                        } else {
+                            setIdeaError('Maaf, tidak dapat menghasilkan ide saat ini. Coba lagi.');
+                            console.error('Unexpected API response structure:', result);
+                        }
+                    } catch (error) {
+                        setIdeaError('Terjadi kesalahan saat menghubungi Gemini API. Mohon coba lagi nanti.');
+                        console.error('Error calling Gemini API:', error);
+                    } finally {
+                        setIsGeneratingIdeas(false);
+                    }
+                };
 
                 return (
                     <div className="flex flex-col p-4 bg-gray-50 min-h-screen pb-20">
                         <Header showBackButton={true} onBack={() => navigateTo('home')} />
                         <div className="flex-grow flex flex-col items-center pt-8 w-full max-w-md mx-auto">
+                            <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Belajar Daur Ulang</h2>
+
+                            {/* Existing Learn Cards */}
+                            <div className="bg-white p-6 rounded-2xl shadow-lg mb-6 w-full transform transition-transform duration-300 hover:scale-[1.02]">
+                                <h3 className="font-bold text-xl text-green-700 mb-3">Memilah Sampah dengan Benar</h3>
+                                <p className="text-gray-700 text-base leading-relaxed">
+                                    Memilah sampah adalah langkah pertama yang krusial. Kenali jenis-jenis sampah seperti plastik, kertas, kaca, dan organik. Pastikan sampah bersih sebelum dibuang ke tempat yang sesuai.
+                                </p>
+                                <button onClick={() => alert('Membuka materi lebih lanjut tentang pemilahan sampah...')} className="mt-4 text-blue-600 hover:underline font-semibold">
+                                    Baca Selengkapnya <i className="fas fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-2xl shadow-lg mb-6 w-full transform transition-transform duration-300 hover:scale-[1.02]">
+                                <h3 className="font-bold text-xl text-yellow-700 mb-3">Manfaat Daur Ulang</h3>
+                                <p className="text-gray-700 text-base leading-relaxed">
+                                    Daur ulang mengurangi polusi, menghemat energi, dan melestarikan sumber daya alam. Ini adalah kontribusi nyata untuk bumi yang lebih hijau dan masa depan yang berkelanjutan.
+                                </p>
+                                <button onClick={() => alert('Membuka materi lebih lanjut tentang manfaat daur ulang...')} className="mt-4 text-blue-600 hover:underline font-semibold">
+                                    Baca Selengkapnya <i className="fas fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+
+                            {/* New Gemini LLM Feature: Creative Recycling Ideas */}
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-2xl shadow-lg mb-6 w-full transform transition-transform duration-300 hover:scale-[1.02] border-2 border-emerald-300">
+                                <h3 className="font-bold text-xl text-emerald-700 mb-3 flex items-center">
+                                    Dapatkan Ide Kreatif ✨
+                                </h3>
+                                <p className="text-gray-700 text-base leading-relaxed mb-4">
+                                    Masukkan jenis material daur ulang (misalnya, "botol plastik", "kardus bekas") dan biarkan Gemini memberikan ide-ide unik untuk Anda!
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder="Contoh: botol plastik, kaos bekas"
+                                    value={creativeIdeaInput}
+                                    onChange={(e) => setCreativeIdeaInput(e.target.value)}
+                                    className="w-full p-3 mb-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                />
+                                <button
+                                    onClick={generateCreativeIdeas}
+                                    disabled={isGeneratingIdeas}
+                                    className={`w-full py-3 px-6 rounded-full font-bold text-white shadow-md transition-all duration-300 transform ${isGeneratingIdeas ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 hover:scale-105'} flex items-center justify-center`}
+                                >
+                                    {isGeneratingIdeas ? (
+                                        <>
+                                            <i className="fas fa-spinner fa-spin mr-3 text-xl"></i> Menghasilkan Ide...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fas fa-magic mr-3 text-xl"></i> Hasilkan Ide!
+                                        </>
+                                    )}
+                                </button>
+                                {ideaError && <p className="text-red-600 text-sm mt-2 text-center">{ideaError}</p>}
+
+                                {creativeIdeasOutput && (
+                                    <div className="mt-6 p-4 bg-emerald-50 rounded-lg border border-emerald-200 shadow-inner">
+                                        <h4 className="font-semibold text-emerald-800 mb-2">Ide untuk Anda:</h4>
+                                        <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
+                                            {creativeIdeasOutput}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-white p-6 rounded-2xl shadow-lg mb-6 w-full transform transition-transform duration-300 hover:scale-[1.02]">
+                                <h3 className="font-bold text-xl text-purple-700 mb-3">Proyek Daur Ulang Kreatif</h3>
+                                <p className="text-gray-700 text-base leading-relaxed">
+                                    Ubah barang bekas menjadi sesuatu yang baru! Botol plastik bisa jadi pot bunga, kardus jadi tempat pensil, dan kain perca jadi tas belanja. Mari berkreasi!
+                                </p>
+                                <button onClick={() => alert('Membuka panduan proyek kreatif...')} className="mt-4 text-blue-600 hover:underline font-semibold">
+                                    Lihat Ide <i className="fas fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                );
+            };
+
+            // Product Detail Page Component
+            const ProductDetailPage = ({ product, points, setPoints, navigateTo }) => {
+                if (!product) {
+                    return (
+                        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+                            <Header showBackButton={true} onBack={() => navigateTo('marketplace')} />
+                            <p className="text-xl text-gray-700 mt-8">Produk tidak ditemukan.</p>
+                            <button
+                                onClick={() => navigateTo('marketplace')}
+                                className="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-md"
+                            >
+                                Kembali ke Marketplace
+                            </button>
+                        </div>
+                    );
+                }
+
+                const handlePurchaseOnDetail = () => {
+                    if (points >= product.priceInPoints) {
+                        setPoints(prevPoints => prevPoints - product.priceInPoints);
+                        alert(`Pembelian ${product.name} berhasil! Poin Anda sekarang: ${points - product.priceInPoints}`);
+                        navigateTo('marketplace'); // Go back to marketplace after purchase
+                    } else {
+                        alert(`Maaf, poin Anda tidak cukup untuk membeli ${product.name}. Poin Anda: ${points}, Dibutuhkan: ${product.priceInPoints}`);
+                    }
+                };
+
+                const renderStars = (rating) => {
+                    const stars = [];
+                    for (let i = 0; i < 5; i++) {
+                        if (i < rating) {
+                            stars.push(<i key={i} className="fas fa-star text-yellow-400"></i>);
+                        } else {
+                            stars.push(<i key={i} className="far fa-star text-gray-400"></i>);
+                        }
+                    }
+                    return stars;
+                };
+
+                return (
+                    <div className="flex flex-col p-4 bg-gray-50 min-h-screen pb-20">
+                        <Header showBackButton={true} onBack={() => navigateTo('marketplace')} />
+                        <div className="flex-grow flex flex-col items-center pt-8 w-full max-w-xl mx-auto">
+                            {/* Product Image */}
+                            <div className="w-full bg-white rounded-3xl shadow-lg overflow-hidden mb-6 border border-gray-200">
+                                <img
+                                    src={product.imageUrl}
+                                    alt={product.name}
+                                    className="w-full h-80 object-cover rounded-t-3xl"
+                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x320/cccccc/000000?text=Product+Image"; }}
+                                />
+                                <div className="p-4 bg-white text-center">
+                                    <h1 className="text-3xl font-bold text-gray-800 mb-2">{product.name}</h1>
+                                    <p className="text-4xl font-extrabold text-green-600 mb-4">{product.price}</p>
+                                    <div className="flex items-center justify-center text-gray-600">
+                                        Poin Anda: <span className="ml-2 font-bold text-emerald-700">{points}</span> <i className="fas fa-coins text-yellow-500 ml-1"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Product Description */}
+                            <div className="bg-white p-6 rounded-2xl shadow-lg mb-6 w-full">
+                                <h3 className="font-bold text-xl text-gray-800 mb-3">Deskripsi Produk</h3>
+                                <p className="text-gray-700 leading-relaxed text-base">{product.description}</p>
+                            </div>
+
+                            {/* Product Specifications */}
+                            <div className="bg-white p-6 rounded-2xl shadow-lg mb-6 w-full">
+                                <h3 className="font-bold text-xl text-gray-800 mb-3">Spesifikasi</h3>
+                                <ul className="list-disc list-inside text-gray-700 leading-relaxed text-base">
+                                    {product.specifications.map((spec, index) => (
+                                        <li key={index}>{spec}</li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            {/* User Reviews */}
+                            <div className="bg-white p-6 rounded-2xl shadow-lg mb-6 w-full">
+                                <h3 className="font-bold text-xl text-gray-800 mb-4">Ulasan Pelanggan</h3>
+                                {product.reviews && product.reviews.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {product.reviews.map((review, index) => (
+                                            <div key={index} className="border-b border-gray-200 pb-4 last:border-b-0">
+                                                <div className="flex items-center mb-2">
+                                                    <span className="font-semibold text-gray-700 mr-2">{review.user}</span>
+                                                    <div className="flex text-sm">
+                                                        {renderStars(review.rating)}
+                                                    </div>
+                                                </div>
+                                                <p className="text-gray-600 text-sm italic">"{review.comment}"</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-500 text-sm">Belum ada ulasan untuk produk ini.</p>
+                                )}
+                            </div>
+
+                            {/* Buy Button */}
+                            <button
+                                onClick={handlePurchaseOnDetail}
+                                className={`w-full py-4 px-6 rounded-full font-bold text-white shadow-xl transition-all duration-300 transform ${points >= product.priceInPoints ? 'bg-green-600 hover:bg-green-700 hover:scale-105' : 'bg-red-500 cursor-not-allowed'} flex items-center justify-center text-xl`}
+                                disabled={points < product.priceInPoints}
+                            >
+                                <i className="fas fa-shopping-cart mr-3"></i>
+                                {points >= product.priceInPoints ? `Beli Sekarang (${product.priceInPoints} Poin)` : `Poin Tidak Cukup (${product.priceInPoints} Poin)`}
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            // Marketplace Screen Component
+            const MarketplaceScreen = () => {
+                // Products array is now globally accessible as allProducts
+                return (
+                    <div className="flex flex-col p-4 bg-gray-50 min-h-screen pb-20">
+                        <Header showBackButton={true} onBack={() => navigateTo('home')} />
+                        <div className="flex-grow flex flex-col items-center pt-8 w-full max-w-md mx-auto">
                             <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Marketplace Produk Daur Ulang</h2>
+
+                            <div className="w-full bg-emerald-100 text-emerald-800 px-6 py-4 rounded-xl shadow-md mb-6 flex items-center justify-between">
+                                <span className="text-lg font-semibold">Poin Anda Saat Ini:</span>
+                                <span className="text-2xl font-bold flex items-center">
+                                    <i className="fas fa-coins text-yellow-500 mr-2"></i> {points} Poin
+                                </span>
+                            </div>
 
                             <div className="relative w-full h-48 bg-cover bg-center rounded-2xl overflow-hidden shadow-lg mb-6"
                                  style={{ backgroundImage: `url('https://placehold.co/400x200/a7f3d0/065f46?text=Eco+Products')` }}>
@@ -444,8 +744,12 @@
 
                             <h3 className="text-2xl font-bold text-gray-800 mb-4 self-start">Produk Baru</h3>
                             <div className="grid grid-cols-2 gap-4 w-full">
-                                {products.map(product => (
-                                    <div key={product.id} className="bg-white rounded-xl shadow-md overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-lg">
+                                {allProducts.map(product => ( // Use allProducts here
+                                    <div
+                                        key={product.id}
+                                        className="bg-white rounded-xl shadow-md overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-lg cursor-pointer"
+                                        onClick={() => navigateTo('product-detail', product)} // Navigate to product detail page
+                                    >
                                         <img
                                             src={product.imageUrl}
                                             alt={product.name}
@@ -455,12 +759,9 @@
                                         <div className="p-3">
                                             <h4 className="font-semibold text-gray-800 text-base truncate">{product.name}</h4>
                                             <p className="text-green-600 font-bold mt-1">{product.price}</p>
-                                            <button
-                                                onClick={() => alert(`Anda mengklik ${product.name}. Fitur pembelian belum tersedia.`)}
-                                                className="mt-2 bg-green-500 hover:bg-green-600 text-white text-sm py-1 px-3 rounded-full w-full"
-                                            >
-                                                Beli Sekarang
-                                            </button>
+                                            <div className="text-gray-600 text-sm mt-1">
+                                                <i className="fas fa-coins text-yellow-500 mr-1"></i> {product.priceInPoints} Poin
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -490,27 +791,34 @@
                         return <LearnScreen />;
                     case 'marketplace':
                         return <MarketplaceScreen />;
+                    case 'product-detail': // New case for product detail page
+                        return <ProductDetailPage
+                                   product={selectedProduct}
+                                   points={points}
+                                   setPoints={setPoints}
+                                   navigateTo={navigateTo}
+                               />;
                     default:
                         return <HomeScreen />;
                 }
             };
 
             return (
-                <div className="relative font-inter antialiased text-gray-900 bg-gray-50">
-                    {/* Render the current screen */}
+                <div className="relative font-inter antialiased text-gray-900">
                     <div className="min-h-screen flex flex-col justify-between">
                         <div className="flex-grow">
                             {renderScreen()}
                         </div>
-                        {/* Always show the bottom navigation bar */}
                         <BottomNavBar />
                     </div>
                 </div>
             );
         };
 
-        // Render the App component into the root div
-        ReactDOM.render(<App />, document.getElementById('root'));
+        // Use createRoot instead of ReactDOM.render for React 18 compatibility
+        const container = document.getElementById('root');
+        const root = createRoot(container);
+        root.render(<App />);
     </script>
 </body>
 </html>
